@@ -1,0 +1,62 @@
+# This workflow demonstrates a multi-platform matrix build
+# that generates and uploads unique artifacts for each job.
+
+name: Multi-Platform Matrix Build
+
+# Trigger the workflow on every push to the main branch
+on:
+  push:
+    branches:
+      - main
+      - master # Include master just in case that's the default branch name
+
+jobs:
+  build:
+    # Job name
+    name: Build on Python ${{ matrix.python-version }}
+    
+    # Run on the latest Ubuntu runner
+    runs-on: ubuntu-latest
+
+    # Define the build matrix
+    strategy:
+      # Do not cancel other jobs in the matrix if one fails
+      fail-fast: false
+      matrix:
+        # We'll use 3 different Python versions as our matrix variants
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the specific Python version for this matrix job
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Step 3: This step includes the required identifier "matrix-e9f689f"
+      - name: Install dependencies (matrix-e9f689f)
+        id: matrix-e9f689f # The unique step identifier
+        run: |
+          echo "Setting up build for Python ${{ matrix.python-version }}"
+          python -m pip install --upgrade pip
+
+      # Step 4: Generate a unique build artifact for this matrix job
+      - name: Generate build artifact
+        run: |
+          echo "This is the build output for Python ${{ matrix.python-version }}." > build-output.txt
+          echo "Generated on $(date)" >> build-output.txt
+          python --version >> build-output.txt
+
+      # Step 5: Upload the unique artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # Name the artifact with the required prefix and a unique variant identifier
+          name: build-e9f689f-py${{ matrix.python-version }}
+          
+          # Specify the file to upload
+          path: build-output.txt
